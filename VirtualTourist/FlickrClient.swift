@@ -40,7 +40,7 @@ class FlickrClient: NSObject {
         // Handle the outcome of the task. If there is an error, display relevant information to the user (Flickr is not responding, no network connection, etc). If success, pass the data to be parsed. If that succeeds, do checks to get back the totalPages.
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
             if downloadError != nil {
-                println(downloadError.description)
+                print(downloadError.description)
             } else {
                 self.parseJSONWithCompletionHandler(data) { (parsedData, parsedError) in
                     if parsedError != nil {
@@ -98,7 +98,7 @@ class FlickrClient: NSObject {
       // Build the method we will use in our Flickr seach
     func buildMethod(latitude: String?, longitude: String?) -> [String: AnyObject]{
         
-        var methodArguments = [
+        let methodArguments = [
             FlickrConstants.ArgumentKeys.METHOD_NAME : FlickrConstants.Search.METHOD_NAME,
             FlickrConstants.ArgumentKeys.API_KEY : FlickrConstants.Search.API_KEY,
             FlickrConstants.ArgumentKeys.SAFE_SEARCH : FlickrConstants.Search.SAFE_SEARCH,
@@ -117,7 +117,13 @@ class FlickrClient: NSObject {
     func parseJSONWithCompletionHandler(data: NSData, completionHandler: (result: AnyObject!, error: NSError?) -> Void) {
         
         var parsingError: NSError? = nil
-        let parsedResult: AnyObject? = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError)
+        let parsedResult: AnyObject?
+        do {
+            parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments)
+        } catch let error as NSError {
+            parsingError = error
+            parsedResult = nil
+        }
         if let error = parsingError {
             completionHandler(result: nil, error: error)
         } else {
@@ -137,7 +143,7 @@ class FlickrClient: NSObject {
             /* Append it */
             urlVars += [key + "=" + "\(escapedValue!)"]
         }
-        return (!urlVars.isEmpty ? "?" : "") + join("&", urlVars)
+        return (!urlVars.isEmpty ? "?" : "") + urlVars.joinWithSeparator("&")
     }
     
     // Create global instance of FlickrClient to use throughout Virtual Tourist
@@ -152,7 +158,7 @@ class FlickrClient: NSObject {
 
 extension FlickrClient  {
     
-    // Called when creating our pin to perform the initial photo search from Flickr. It returns an array objects which will parse though and create our photo objects from. Then we set the photo object's pin, and download the image data from the url we are given using the downloadPhotoImageForPin function. Last, we save our photo object in our shared context.
+    // Called when creating our pin to perform the initial photo search from Flickr. It returns an array of objects which we'll parse though and create our photo objects from. Then we set the photo object's pin, and download the image data from the url we are given using the downloadPhotoImageForPin function. Last, we save our photo object in our shared context.
     func getPhotosForPin(pin : Pin) {
         
         let latitude = pin.latitude.stringValue
@@ -165,11 +171,11 @@ extension FlickrClient  {
                 FlickrClient.sharedInstance().getPaginationFromFlickr(latitude, longitude: longitude) {(success: Bool, totalPages: Int?, errorString: String?) in
                     
                     if success {
-                        println("Success getting totalPages")
+                        print("Success getting totalPages")
                         
                         pin.totalPages = totalPages
-                        println("Printing the current pin's info: ")
-                        println(pin)
+                        print("Printing the current pin's info: ")
+                        print(pin)
                         if totalPages == 0 {
                             return
                         } else  {
@@ -177,17 +183,17 @@ extension FlickrClient  {
                         pin.currentPage == 1
                         FlickrClient.sharedInstance().getPhotosFromFlickrWithPageNumber(latitude, longitude: longitude, pageNumber: totalPages!) {(success: Bool, result : [[String: AnyObject]]?, errorString: String?) in
                             if success {
-                                println("Success getting initial photos!")
-                                println("Alert user of completion... Maybe change pin color?")
+                                print("Success getting initial photos!")
+                                print("Alert user of completion... Maybe change pin color?")
                                 
                                 
                                 let photosDictionaries = result!
                                 var photos = photosDictionaries.map() {(dictionary: [String : AnyObject]) -> Photo in
-                                    var photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                                    let photo = Photo(dictionary: dictionary, context: self.sharedContext)
                                     photo.pin = pin
                                     self.downloadPhotoImageForPin(photo){success, data, errorString in
                                         if let error = errorString {
-                                            println(errorString)
+                                            print(errorString)
                                         } else {
                                              ImageCache.Caches.imageCache.storeImage(UIImage(data:data!), withIdentifier: photo.url_m.lastPathComponent)
                                         }
@@ -196,18 +202,18 @@ extension FlickrClient  {
                                 }
                                 CoreDataStackManager.sharedInstance().saveContext()
                             } else {
-                                println("Failed getting photos!")
+                                print("Failed getting photos!")
                             }
                         }
                         }
                     }
                     else {
-                        println("Failed to get totalPages")
-                        println(errorString)
+                        print("Failed to get totalPages")
+                        print(errorString)
                     }
                 }
             } else {
-                println("Photos array contains existing photos")
+                print("Photos array contains existing photos")
                 //Handle existing photos, then call for pagination.
             }
         } else {
@@ -215,10 +221,10 @@ extension FlickrClient  {
             FlickrClient.sharedInstance().getPaginationFromFlickr(latitude, longitude: longitude) { (success: Bool, totalPages: Int?, errorString: String?) in
                 
                 if success {
-                    println("Success getting pages!")
+                    print("Success getting pages!")
                 } else {
-                    println("Failed to get totalPages")
-                    println(errorString)
+                    print("Failed to get totalPages")
+                    print(errorString)
                 }
             }
         }
@@ -227,13 +233,13 @@ extension FlickrClient  {
     // Called to download the photo image after we create our photo object
     func downloadPhotoImageForPin(imageForDownload: Photo, completionHandler: (success: Bool, data: NSData?, errorString: String?) -> Void) -> NSURLSessionDataTask {
         
-        var session = NSURLSession.sharedSession()
+        let session = NSURLSession.sharedSession()
         let url = NSURL(string: imageForDownload.url_m)
         let request = NSURLRequest(URL: url!)
         
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
             if let error = downloadError {
-                println("Error downloading image")
+                print("Error downloading image")
                 completionHandler(success: false, data: nil, errorString: error.description)
             } else {
                 if let data = data {

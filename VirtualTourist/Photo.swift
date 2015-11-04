@@ -27,7 +27,7 @@ class Photo : NSManagedObject {
     @NSManaged var id : String
     @NSManaged var title : String
     @NSManaged var pin : Pin?
-    @NSManaged var downloadedPhoto : UIImage?
+  //  @NSManaged var downloadedPhoto : UIImage?
     
     // Standard init when using Core Data
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context : NSManagedObjectContext?) {
@@ -56,15 +56,18 @@ class Photo : NSManagedObject {
     // I found this lifesaving function in the NSManagedObject documentation. Just what I need to remove the cache! When CoreData signals its about to delete a photo object, it calls prepareForDeletion. Here, we use NSFileManager to check for a cached image. If it exists, we delete it. 
     override func prepareForDeletion() {
         let fileManager = NSFileManager.defaultManager()
-        var cachedImagePath = ImageCache.Caches.imageCache.pathForIdentifier(url_m.lastPathComponent)
-        
+        let cachedImagePath = ImageCache.Caches.imageCache.pathForIdentifier(url_m.lastPathComponent)
     
         if fileManager.fileExistsAtPath(cachedImagePath) {
             var error: NSError? = nil
-            fileManager.removeItemAtPath(cachedImagePath, error: &error)
+            do {
+                try fileManager.removeItemAtPath(cachedImagePath)
+            } catch let error1 as NSError {
+                error = error1
+            }
             if let error = error {
-                println("Cached image could not be deleted.")
-                println(error)
+                print("Cached image could not be deleted.")
+                print(error)
             }
         }
         

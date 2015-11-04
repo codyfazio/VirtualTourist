@@ -27,7 +27,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     }()
     
     func applicationDirectoryPath() -> String {
-        return NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true).last! as! String
+        return NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true).last! 
     }
     
     // VIEW LIFECYCLE
@@ -43,14 +43,17 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
         //Set fetchResultsController delegate to self so we can monitor changes
         fetchedResultsController.delegate = self
         
-        //Get data from CoreData relating to our Pin entity
-        fetchedResultsController.performFetch(nil)
+        do {
+            //Get data from CoreData relating to our Pin entity
+            try fetchedResultsController.performFetch()
+        } catch _ {
+        }
         
         // Gets the last viewed mapRegion from NSUserDefaults and sets the map to those specs
         restoreMapRegion()
         
         let path = applicationDirectoryPath()
-        println(path)
+        print(path)
     
     }
     
@@ -74,7 +77,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     
     // Sets up our mapView for handling long presses
     func handleLongPress() {
-        var longPressRecognizer = UILongPressGestureRecognizer(target: self, action: "createPin:")
+        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: "createPin:")
         longPressRecognizer.delegate = self
         longPressRecognizer.numberOfTapsRequired = 0
         longPressRecognizer.minimumPressDuration = 0.5
@@ -93,7 +96,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
         let latitude = pressLocationCoordinate.latitude
         let longitude = pressLocationCoordinate.longitude
         let coordinates = CLLocation(latitude: latitude, longitude: longitude)
-        println(coordinates)
+        print(coordinates)
         
         var name = ""
         var geoCoder = CLGeocoder()
@@ -102,7 +105,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
             
             var placeMark: CLPlacemark!
             placeMark = placeArray[0]
-            println(placeMark)
+            print(placeMark)
             name = placeMark.addressDictionary["Name"] as! String
             if let dictionary = self.createDictionaryForPin(pressLocationCoordinate, name: name) {
                 let newPin = Pin(dictionary: dictionary, context: self.sharedContext)
@@ -115,7 +118,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     // Creates a dictionary to pass when creating our pin instance
     func createDictionaryForPin(coordinate: CLLocationCoordinate2D, name : String) -> [String : AnyObject]? {
         
-        var dictionary : [String : AnyObject] = [
+        let dictionary : [String : AnyObject] = [
             "latitude" : coordinate.latitude,
             "longitude" : coordinate.longitude,
             "name" : name
@@ -127,7 +130,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     // MAPKIT FUNCTIONS
     
     // Monitors the mapView. When the region changes, the new information is saved to NSUserDefaults
-    func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
+    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         
         let mapRegion = [
             "latitude" : mapView.region.center.latitude,
@@ -142,7 +145,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     }
     
     // Sets up a custom view for pin annotations
-    func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView! {
         
         if let annotation = annotation as? Pin {
             let identifier = "pin"
@@ -151,7 +154,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
             if pinView == nil {
                 pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
                 pinView!.canShowCallout = true
-                pinView!.rightCalloutAccessoryView = UIButton.buttonWithType(.DetailDisclosure) as! UIButton
+                pinView!.rightCalloutAccessoryView = UIButton(type: .DetailDisclosure)
                 pinView!.animatesDrop = true
                 
                 
@@ -168,7 +171,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     // This was adapted from the MapKit example on Udacity
     // This delegate method is implemented to respond to taps. It calls takeMapSnapshot to take a screenshot of the current mapView, then storeImage from ImageCache to save the image to disk and in cache, and then presents the photoCollectionView through its navigation controller.
     
-    func mapView(mapView: MKMapView!, annotationView: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
+    func mapView(mapView: MKMapView, annotationView: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
         
         currentPin = annotationView.annotation as! Pin
         if currentPin.totalPages == 0 {
@@ -191,7 +194,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
                     })
                 }
             } else {
-                println(errorString)
+                print(errorString)
             }
         }
         }
@@ -249,7 +252,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     extension MapViewController :  NSFetchedResultsControllerDelegate {
         
         //This monitors changes in our Pin entity and makes necessary changes to the view
-        func controller(controller: NSFetchedResultsController, didChangeObject pinObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+        func controller(controller: NSFetchedResultsController, didChangeObject pinObject: NSManagedObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
             
             let pin = pinObject as! Pin
             
@@ -264,7 +267,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
                 
             case NSFetchedResultsChangeType.Update:
                 
-                println("Still need to hande update case in FetchedResultsChangeType switch")
+                print("Still need to hande update case in FetchedResultsChangeType switch")
                 //Do something here to update our annotation!!!!
                 
                 

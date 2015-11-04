@@ -219,6 +219,8 @@
 		ADC479B01B27B98A005652DD /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftMigration = 0700;
+				LastSwiftUpdateCheck = 0700;
 				LastUpgradeCheck = 0630;
 				ORGANIZATIONNAME = "Cody Fazio";
 				TargetAttributes = {

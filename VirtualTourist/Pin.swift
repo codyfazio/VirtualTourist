@@ -54,17 +54,18 @@ class Pin : NSManagedObject, MKAnnotation {
 
     // Computed property that returns a coordinate from two string values
     var coordinate: CLLocationCoordinate2D {
-        
-        get {return CLLocationCoordinate2D(latitude: latitude as! Double , longitude: longitude as! Double) }
+        get {return CLLocationCoordinate2D(latitude: latitude as Double , longitude: longitude as Double) }
         set {self.latitude = newValue.latitude
              self.longitude = newValue.longitude }
         }
+    
+    
 
     // Annotation title and subtitle
-    var title : String {
+    var title : String? {
         return name
     }
-    var subtitle : String {
+    var subtitle : String? {
         return ""
     }
 }

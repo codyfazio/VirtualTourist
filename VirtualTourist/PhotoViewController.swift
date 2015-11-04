@@ -40,7 +40,10 @@ class PhotoViewController : UIViewController, UICollectionViewDataSource, UIColl
        
         // Set ourselves as the delegate for the fetchResultsController and get our initial data from CoreData
         fetchedResultsController.delegate = self
-        fetchedResultsController.performFetch(nil)
+        do {
+            try fetchedResultsController.performFetch()
+        } catch _ {
+        }
         
         // Show navigation bar
         self.navigationController?.navigationBarHidden = false
@@ -58,7 +61,7 @@ class PhotoViewController : UIViewController, UICollectionViewDataSource, UIColl
                 if success {
                 self.barButtonNewCollection.enabled = true
                 } else {
-                    println(errorString)
+                    print(errorString)
                 }
             }
         } else {
@@ -90,7 +93,7 @@ class PhotoViewController : UIViewController, UICollectionViewDataSource, UIColl
                 if success {
                     self.barButtonNewCollection.enabled = true
                 } else {
-                    println(errorString)
+                    print(errorString)
                 }
             }
 
@@ -102,8 +105,8 @@ class PhotoViewController : UIViewController, UICollectionViewDataSource, UIColl
     
     func getMorePhotos(completionHander:(success:Bool, errorString: String?) -> Void) {
         
-        var totalPages = Int(pin.totalPages!)
-        var currentPage = Int(pin.currentPage!)
+        let totalPages = Int(pin.totalPages!)
+        let currentPage = Int(pin.currentPage!)
         
         if (totalPages > currentPage) {
             pin.currentPage = currentPage + 1
@@ -116,7 +119,7 @@ class PhotoViewController : UIViewController, UICollectionViewDataSource, UIColl
             if success {
                 let photosDictionaries = result!
                 var photos = photosDictionaries.map() {(dictionary: [String : AnyObject]) -> Photo in
-                    var photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                    let photo = Photo(dictionary: dictionary, context: self.sharedContext)
                     photo.pin = self.pin
                     return photo
                 }
@@ -167,7 +170,7 @@ class PhotoViewController : UIViewController, UICollectionViewDataSource, UIColl
     
     // Get the number of cells from fetchedResultsController
      func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let sectionInfo = self.fetchedResultsController.sections![section] as! NSFetchedResultsSectionInfo
+        let sectionInfo = self.fetchedResultsController.sections![section] 
         // println("Number of cells: \(sectionInfo.numberOfObjects)")
         return sectionInfo.numberOfObjects
     }
@@ -184,7 +187,7 @@ class PhotoViewController : UIViewController, UICollectionViewDataSource, UIColl
         let cell = photoCollectionView.cellForItemAtIndexPath(indexPath) as! PhotoCollectionCell
         
         // Whenever a photo is tapped we will toggle its presence in the selectedIndexes array
-        if let index = find(selectedIndexes, indexPath) {
+        if let index = selectedIndexes.indexOf(indexPath) {
             selectedIndexes.removeAtIndex(index)
         } else {
             selectedIndexes.append(indexPath)
@@ -208,7 +211,7 @@ class PhotoViewController : UIViewController, UICollectionViewDataSource, UIColl
         let pin = photo.pin! as Pin
        
         if photo.url_m == "" {
-            println("URL for photoImage is nil or an empty string")
+            print("URL for photoImage is nil or an empty string")
         } else if photo.photoImage != nil {
                 imageForCell = photo.photoImage
         }
@@ -226,12 +229,12 @@ class PhotoViewController : UIViewController, UICollectionViewDataSource, UIColl
                         cell.photoImageView.image = image
                     }
                 } else {
-                    println(errorString)
+                    print(errorString)
                 }
             }
         }
         
-        if let index = find(selectedIndexes, indexPath) {
+        if let index = selectedIndexes.indexOf(indexPath) {
             cell.photoImageView.alpha = 0.3
         } else {
             cell.photoImageView.alpha = 1.0
@@ -296,21 +299,21 @@ extension PhotoViewController : NSFetchedResultsControllerDelegate {
     }
     
     // Make changes to individual objects
-    func controller(controller: NSFetchedResultsController, didChangeObject photoObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         
-        let photo = photoObject as! Photo
+       // let photo = photoObject as! Photo
         
         switch(type) {
         case NSFetchedResultsChangeType.Insert:
-            println("didChangeObject for changeType.Insert")
+            print("didChangeObject for changeType.Insert")
             insertedIndexPaths.append(newIndexPath!)
             break
         case NSFetchedResultsChangeType.Delete:
-            println("didChangeObject for changeType.Delete")
+            print("didChangeObject for changeType.Delete")
             deletedIndexPaths.append(indexPath!)
             break
         case NSFetchedResultsChangeType.Update:
-            println("didChangeObject for changeType.Insert")
+            print("didChangeObject for changeType.Insert")
             break
         default:
             break

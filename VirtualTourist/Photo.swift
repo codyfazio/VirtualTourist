@@ -45,18 +45,26 @@ class Photo : NSManagedObject {
     
     }
     
+    var lastComponent : String {
+        
+        get {
+            let url = NSURL(string: url_m)
+            return (url?.lastPathComponent)!
+        }
+    }
+    
     // Computed property that stores our retrieved image in cache and on disk
     var photoImage: UIImage? {
         
-        get {return ImageCache.Caches.imageCache.imageWithIdentifier(url_m.lastPathComponent)}
-        set {ImageCache.Caches.imageCache.storeImage(newValue, withIdentifier: url_m.lastPathComponent) }
+        get { return ImageCache.Caches.imageCache.imageWithIdentifier(lastComponent)}
+        set { ImageCache.Caches.imageCache.storeImage(newValue, withIdentifier: lastComponent) }
     }
     
     
     // I found this lifesaving function in the NSManagedObject documentation. Just what I need to remove the cache! When CoreData signals its about to delete a photo object, it calls prepareForDeletion. Here, we use NSFileManager to check for a cached image. If it exists, we delete it. 
     override func prepareForDeletion() {
         let fileManager = NSFileManager.defaultManager()
-        let cachedImagePath = ImageCache.Caches.imageCache.pathForIdentifier(url_m.lastPathComponent)
+        let cachedImagePath = ImageCache.Caches.imageCache.pathForIdentifier(lastComponent)
     
         if fileManager.fileExistsAtPath(cachedImagePath) {
             var error: NSError? = nil
@@ -70,7 +78,5 @@ class Photo : NSManagedObject {
                 print(error)
             }
         }
-        
     }
-    
 }

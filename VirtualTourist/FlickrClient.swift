@@ -40,9 +40,9 @@ class FlickrClient: NSObject {
         // Handle the outcome of the task. If there is an error, display relevant information to the user (Flickr is not responding, no network connection, etc). If success, pass the data to be parsed. If that succeeds, do checks to get back the totalPages.
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
             if downloadError != nil {
-                print(downloadError.description)
+                print(downloadError!.description)
             } else {
-                self.parseJSONWithCompletionHandler(data) { (parsedData, parsedError) in
+                self.parseJSONWithCompletionHandler(data!) { (parsedData, parsedError) in
                     if parsedError != nil {
         
                         completionHandler(success:false, result: nil, errorString: parsedError?.localizedDescription)
@@ -75,7 +75,7 @@ class FlickrClient: NSObject {
             if downloadError != nil {
                 //TODO: Error Handling in Error.swift
             } else {
-                self.parseJSONWithCompletionHandler(data) { (parsedData, parsedError) in
+                self.parseJSONWithCompletionHandler(data!) { (parsedData, parsedError) in
                     if parsedError != nil {
                         //TODO Error Handling in Error.swift
                         completionHandler(success:false, result : nil, errorString: parsedError?.localizedDescription)
@@ -120,8 +120,8 @@ class FlickrClient: NSObject {
         let parsedResult: AnyObject?
         do {
             parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments)
-        } catch let error as NSError {
-            parsingError = error
+        } catch let error {
+            parsingError = error as! NSError
             parsedResult = nil
         }
         if let error = parsingError {
@@ -195,7 +195,7 @@ extension FlickrClient  {
                                         if let error = errorString {
                                             print(errorString)
                                         } else {
-                                             ImageCache.Caches.imageCache.storeImage(UIImage(data:data!), withIdentifier: photo.url_m.lastPathComponent)
+                                             ImageCache.Caches.imageCache.storeImage(UIImage(data:data!), withIdentifier: photo.lastComponent)
                                         }
                                     }
                                     return photo

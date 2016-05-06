@@ -9,10 +9,8 @@
 import UIKit
 import CoreData
 import MapKit
-import Foundation
 
-
-class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsControllerDelegate, UIGestureRecognizerDelegate {
+class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognizerDelegate {
     
     // Create storyboard reference to our mapview
     @IBOutlet weak var mapView: MKMapView!
@@ -101,12 +99,12 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
         var name = ""
         var geoCoder = CLGeocoder()
         geoCoder.reverseGeocodeLocation(coordinates, completionHandler: {(placemarks, error) -> Void in
-            let placeArray = placemarks as! [CLPlacemark]
+            let placeArray = placemarks! as [CLPlacemark]
             
             var placeMark: CLPlacemark!
             placeMark = placeArray[0]
             print(placeMark)
-            name = placeMark.addressDictionary["Name"] as! String
+            name = placeMark.addressDictionary!["Name"] as! String
             if let dictionary = self.createDictionaryForPin(pressLocationCoordinate, name: name) {
                 let newPin = Pin(dictionary: dictionary, context: self.sharedContext)
                 FlickrClient.sharedInstance().getPhotosForPin(newPin)
@@ -216,10 +214,10 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
         snapshotter.startWithCompletionHandler() {snapshot, error in
             
             if (error != nil) {
-                completionHandler(success: false, image : nil , errorString: error.localizedDescription)
+                completionHandler(success: false, image : nil , errorString: error!.localizedDescription)
             } else {
                 
-                image = snapshot.image
+                image = snapshot!.image
                 completionHandler(success: true, image: image! , errorString: nil)
             }
         }
@@ -251,10 +249,9 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
     //MapKit related fetchedResultsController functions
     extension MapViewController :  NSFetchedResultsControllerDelegate {
         
-        //This monitors changes in our Pin entity and makes necessary changes to the view
-        func controller(controller: NSFetchedResultsController, didChangeObject pinObject: NSManagedObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
-            
-            let pin = pinObject as! Pin
+       
+        func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+            let pin = anObject as! Pin
             
             switch(type) {
             case NSFetchedResultsChangeType.Insert:
@@ -277,13 +274,15 @@ class MapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsCo
             default:
                 break
             }
+
         }
+        
         
         // Called to clean up the map, it removes all annotations and repopulates the map with those saved to our context
         func refreshAnnotations() {
             let annotations = mapView.annotations
             mapView.removeAnnotations(annotations)
-            mapView.addAnnotations(fetchedResultsController.fetchedObjects)
+            mapView.addAnnotations(fetchedResultsController.fetchedObjects as! [MKAnnotation])
         }
 }
        
